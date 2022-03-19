@@ -4,16 +4,16 @@ description: install docker and docker-compose in ubuntu machines
 
 inputs:
   ssh_host:
-    required: true
     description: remote address
+    required: true
 
   ssh_user:
     description: remote username
     required: true
 
   ssh_key:
-    required: true
     description: ssh private key
+    required: true
 
   reboot_time:
     default: 60
@@ -23,8 +23,7 @@ runs:
   using: composite
   steps:
     - name: Install docker and docker-compose
-      if: false
-      uses: picodebr/ssh-action@v1.1
+      uses: picodebr/ssh-action@v1.2
       with:
         ssh_host: ${{ inputs.ssh_host }}
         ssh_user: ${{ inputs.ssh_user }}
@@ -47,7 +46,7 @@ runs:
                 gnupg \
                 lsb-release -y
 
-            # 2 - add docker's official GPG key
+            # 2 - add dockers official GPG key
             curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor --batch --yes -o /usr/share/keyrings/docker-archive-keyring.gpg
 
             # 3 - setup a stable repository
@@ -68,16 +67,18 @@ runs:
             # 7 - verify the install version
             docker --version
 
-            echo INSTALL_DOCKER_ACTION=done >> ~/.bashrc
+            # signal the github runner to reboot the machine
+            touch /tmp/install_docker_action
+
             echo "Reboot the system to complete the docker installation."
           else
             echo "Docker already installed. No system reboot is needed."
           fi
 
           INSTALL_DOCKER_COMPOSE=false
-          which docker-compose || INSTALL_DOCKER=true
+          which docker-compose || INSTALL_DOCKER_COMPOSE=true
 
-          if [[ "$INSTALL_DOCKER_COMPOSE" == "true"]]; then
+          if [[ "$INSTALL_DOCKER_COMPOSE" == "true" ]]; then
             # The following instructions were extracted from https://docs.docker.com/compose/install/
 
             # 0 - prevent interactive mode
@@ -94,25 +95,24 @@ runs:
           fi
 
     - name: Check if reboot is needed
-      if: false
       id: check_reboot
-      uses: picodebr/ssh-action@v1.1
+      uses: picodebr/ssh-action@v1.2
       with:
-        user: ${{ secrets.SSH_USER }}
-        host: ${{ secrets.SSH_HOST }}
-        key: ${{ secrets.SSH_KEY }}
-        command: echo '$INSTALL_DOCKER_ACTION'
+        ssh_host: ${{ inputs.ssh_host }}
+        ssh_user: ${{ inputs.ssh_user }}
+        ssh_key: ${{ inputs.ssh_key }}
+        command: echo "$(ls /tmp | grep -i install_docker_action)"
 
     - name: Reboot the server if necessary
-      if: steps.check_reboot.outputs.output != 'done'
-      uses: picodebr/ssh-action@v1.1
+      if: steps.check_reboot.outputs.output == 'install_docker_action'
+      uses: picodebr/ssh-action@v1.2
       with:
-        user: ${{ secrets.SSH_USER }}
-        host: ${{ secrets.SSH_HOST }}
-        key: ${{ secrets.SSH_KEY }}
-        commands: sudo reboot
+        ssh_host: ${{ inputs.ssh_host }}
+        ssh_user: ${{ inputs.ssh_user }}
+        ssh_key: ${{ inputs.ssh_key }}
+        command: sudo reboot
 
     - name: Wait server reboot if necessary
-      if: steps.check_reboot.outputs.output != 'done'
+      if: steps.check_reboot.outputs.output == 'install_docker_action'
       shell: bash
       run: sleep ${{ inputs.reboot_time }}s
