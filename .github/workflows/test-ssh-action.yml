@@ -1,0 +1,20 @@
+name: Test ssh action yml
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  test-ssh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: picodebr/ssh-action@v1.1
+        id: list_folders
+        with:
+          ssh_host: ${{ secrets.SSH_HOST }}
+          ssh_user: ${{ secrets.SSH_USER }}
+          ssh_key: ${{ secrets.SSH_KEY }}
+          command: ls -la
+
+      - run: echo "${{ steps.list_folders.outputs.output }}"
