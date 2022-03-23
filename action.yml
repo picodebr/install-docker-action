@@ -29,10 +29,7 @@ runs:
         ssh_user: ${{ inputs.ssh_user }}
         ssh_key: ${{ inputs.ssh_key }}
         command: |
-          INSTALL_DOCKER=false
-          which docker || INSTALL_DOCKER=true
-
-          if [[ "$INSTALL_DOCKER" == "true" ]]; then
+          if ! which docker; then
             # The following instructions were extracted from https://docs.docker.com/engine/install/ubuntu/
 
             # 0 - prevent interactive mode
@@ -75,10 +72,7 @@ runs:
             echo "Docker already installed. No system reboot is needed."
           fi
 
-          INSTALL_DOCKER_COMPOSE=false
-          which docker-compose || INSTALL_DOCKER_COMPOSE=true
-
-          if [[ "$INSTALL_DOCKER_COMPOSE" == "true" ]]; then
+          if ! which docker-compose; then
             # The following instructions were extracted from https://docs.docker.com/compose/install/
 
             # 0 - prevent interactive mode
