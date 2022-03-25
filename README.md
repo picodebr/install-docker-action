@@ -7,7 +7,7 @@ _Note: This is meant to be used on an Ubuntu machine version 20.04.03 or newer._
 ## Usage
 
 ```yml
-- uses: picodebr/install-docker-action@v1
+- uses: picodebr/install-docker-action@v1.1
   with:
     # remote server private ssh key (required)
     ssh_key: ""
@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: List remote home directory
-        uses: picodebr/install-docker-action@v1
+        uses: picodebr/install-docker-action@v1.1
         with:
           ssh_key: ${{ secrets.SSH_KEY }}
           ssh_user: ${{ secrets.SSH_USER }}
